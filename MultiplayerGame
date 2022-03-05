@@ -1,0 +1,298 @@
+//Matt Kearney
+// I pledge my honor that I have abided by the Stevens Honor System.
+
+package hw3;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+/*
+Implementing a multiplayer game based upon a circularly doubly-linked
+list-Each node (or GameEntity) has a reference to the next one and to
+the previous one and is either a GamePlayer or GamePiece-
+ */
+//doubly linked list, adding new node means you have to update the next and prev node
+//index accesses linked list quickly, chaining the next and prev field updated as you add new / remove old GamePieces
+
+
+//Part 1: Basic Operations
+public class MultiplayerGame {
+
+    /*
+    two private fields, GameEntity turnTracker and GameEntity[] index
+
+    turnTracker-> marker used to point at GameEntity taking their turn
+    index-> array where each n entry refers to a GamePlayer and their
+    playerId as the element/ind (index[0] = GamePlayer w/ playerId '0'
+    n-> number of entities in index
+
+    manipulation/instance variables
+     */
+
+    private GameEntity turnTracker;
+    private GameEntity[] index;
+
+    /*
+    Creates multiplayer game with n players- Initialize index to an array
+    of size n-
+     */
+    public MultiplayerGame(int n) {
+        //first pass -> new gamePlayers with gameId .next and .prev = null
+        //second pass -> truly set the .next .prev to the associated player
+
+        index = new GamePlayer[n];
+        if (n == 1) {
+            index[0] = new GamePlayer(null, null, 0);
+            index[0].next = index[0];
+            index[0].prev = index[0];
+        } else {
+            //GamePlayer players;//holds all gameplayers w null next and prev fields-> length n index arrau
+            for (int i = 0; i < n; i++) {
+                index[i] = new GamePlayer(null, null, i);
+
+            }
+            //pass 2
+            for (int i = 0; i < n; i++) {
+                if (i == 0) { //n-1 might be null
+                    index[i].prev = index[n - 1];
+                    index[i].next = index[1];
+                } else if (i == n - 1) {
+                    index[i].prev = index[i - 1];
+                    index[i].next = index[0];
+                } else {
+                    index[i].prev = index[i - 1];
+                    index[i].next = index[i + 1];
+                }
+            }
+
+        }
+    }
+
+    /*
+    return the size of the Multiplayer Game
+    -need to only include gamePieces, not gamePlayers
+     */
+    public int size() {
+        GameEntity current = index[0].next; //start at the second obj
+        int ct = 0;
+        while (!current.equals(index[0])){ //
+            if(current.isGamePlayer()) {
+                current = current.next; //similar to i++ for nodes
+            } else {
+                ct++;
+                current = current.next;
+            }
+        }
+        //need to add the gamePieces together
+        //need help transmitting data and traversing the list
+        return ct;
+    }
+
+    /*
+    adds a GamePiece owned by specified player of the given strength
+    1-> ***error spawn***
+    check if a player w playerId exists (iterate the DLL)
+    Player needs existence confirmed (within bounds)
+
+    2-> GameEntity player = index[playerId].NEXT;
+    "go to player directly": "takes you to desired player"
+
+
+    3-> ***error spawn***
+    add piece to player, iterate linked list until a player is reached
+    *check each time if current piece already holds the name of piece we want to insert
+
+    4-> add piece to that player
+     */
+    public void addGamePiece(int playerId, String name, int strength) {
+        GameEntity curr = new GamePiece(null, null, name, strength); //piece to add
+        if (index[playerId].equals(null)) { //step 1; index out of bounds
+            throw new IllegalArgumentException("addGamePiece: no such player");
+            //step 3 ****
+        }
+        GameEntity check = index[playerId].next; //check for what the next entity is
+        while(!check.isGamePlayer()) {//while not a gameplayer (is game piece)
+            if(name == check.getName()) { //if names are the same throw error
+                throw new IllegalArgumentException("addGamePiece: duplicate entity");
+            }
+            check = check.next; //similar to i++ for linked lists
+        }
+        index[playerId].next.prev = curr;
+        curr.next = index[playerId].next.next.prev;
+        index[playerId].next = curr;
+        curr.prev = index[playerId];
+    }
+    //use index to find people, .next and .prev to manipulate the list
+
+
+    /*
+    removeGamePiece removes the gamePiece owned by the gamePlayer
+    . If no such GamePiece exists, then an IllegalArgumentException
+with the message "removeGamePiece: entity does not exist" should be thrown. If the
+player does not exist, then an IllegalArgumentException with the message "removeGamePiece: no such player" should be thrown.
+     */
+    public void removeGamePiece(int playerId, String name){
+        if(playerId<0 || playerId > index.length-1){
+            throw new IllegalArgumentException("removeGamePiece: no such player");
+        }
+
+        GameEntity del = index[playerId].next;
+        while(!del.isGamePlayer()) {
+            if (del.getName().equals(name)) {
+                del.next.prev = del.prev; //referring to previous
+                del.prev.next = del.next; //sets dels next field to the previous
+                return;
+            }
+            del = del.next;
+        }
+        throw new IllegalArgumentException("removeGamePiece: entity does not exist") ;
+    }
+
+    /*
+    returns boolean of if any of the GamePlayers have the given name
+     */
+    //using a loop we can conditionally check if any gamePlayers have a given name
+    //iterate from the index of the player and check if any of there next fields are gamePieces before the next gamePlayer
+    public boolean hasGamePiece(String name){
+        //pass the data!
+        GameEntity trav = index[0].next; //xstart at first potential piece
+        while (!trav.next.equals(index[0])){
+            if (index[0].next.isGamePlayer() && trav.getName().equals(name)) {//checking playerId not checking pieces
+                return true;
+            }
+            trav = trav.next;
+        }
+        return false;
+    }
+
+    /*
+    removes all gamePieces owned by a specific player
+    If DNE, IllegalArgumentException; return
+     "removeAllGamePieces: no such player"
+     */
+    public void removeAllGamePieces(int playerId){
+        if(playerId>=index.length-1 || playerId<0){
+            throw new IllegalArgumentException("removeAllGamePieces: no such player");
+        }
+        GameEntity del = index[playerId].next;
+        while(!del.isGamePlayer()){
+            //System.out.println(del.getName());
+            del.next.prev=del.prev; //referring to previous
+            del.prev.next=del.next; //sets dels next field to the previous
+            del = del.next;
+        }
+    }
+
+    /* increases strength of the gamePlayer with respective playerId by n,
+    where n can be negative
+    error-> "increaseStrength: no such player"
+     */
+    public void increasesStrength(int playerId, int n){
+        //casting-> updateStrength -> GameEntity inside of a GamePiece
+        if (playerId < 0 || playerId >= index.length){
+            throw new IllegalArgumentException("increaseStrength: no such player");
+        }
+        GameEntity ents = index[playerId].next;
+        while(!ents.isGamePlayer()){
+            ((GamePiece) ents).updateStrength(n);
+            ents = ents.next;
+        }
+
+    }
+
+    /*
+    String representation of MultiplayerGame
+     */
+    public String toString(){//how can I get rid of this error
+        String str= index[0].toString() +"; ";
+        GameEntity curr = index[0];
+        while (curr.next != index[0]) {
+            str += " " + curr.next.toString() + "; ";
+            curr = curr.next; // similar to i++
+
+        }
+        return str;
+    }
+
+    /*
+    remove player of specific playerId
+     */
+    public void removePlayer(int playerId){
+        GameEntity del= index[playerId];
+
+        del.next.prev=del.prev; //referring to previous
+        del.prev.next=del.next; //sets dels next field to the previous
+        del = del.next;
+
+    }
+
+/*
+Part 2: Processing a turn
+ */
+    /*
+    turntracker and set equal to index[0]
+     */
+    public void initializeTurnTracker(){
+        turnTracker = index[0];
+
+    }
+
+    /*
+    moves turnTracker to the next field
+     */
+    public void nextPlayer(){
+        turnTracker = turnTracker.next;
+        while(!turnTracker.next.isGamePlayer()){
+            nextEntity();
+
+        }
+    }
+
+
+    /*
+    moves turnTracker to the next field
+     */
+    public void prevPlayer(){
+        turnTracker=turnTracker.prev;
+        while(!turnTracker.prev.isGamePlayer()){
+            prevEntity();
+
+
+
+        }
+    }
+
+    /*
+    next entity
+     */
+    public void nextEntity(){
+        turnTracker=turnTracker.next;
+    }
+
+    /*
+    prev entity
+     */
+    public void prevEntity(){
+        turnTracker=turnTracker.prev;
+    }
+
+    /*
+    tells turnTracker which entity type it is and returns its toString
+     */
+    public String currentEntityToString(){
+        return turnTracker.toString();
+    }
+
+
+    public static void main(String[] args) {//not gettin any return
+        //processing a turn: Part 2
+        MultiplayerGame fortnite = new MultiplayerGame(4); //lobby
+        fortnite.addGamePiece(0, "p1",100);
+        fortnite.addGamePiece(1, "p2",100);
+        fortnite.addGamePiece(2, "p3",100);
+        fortnite.addGamePiece(3, "p4",100);
+        fortnite.initializeTurnTracker();
+        fortnite.nextPlayer();
+        fortnite.nextEntity();
+        fortnite.prevPlayer();
+        System.out.println(fortnite.currentEntityToString());
+    }
+}
+
