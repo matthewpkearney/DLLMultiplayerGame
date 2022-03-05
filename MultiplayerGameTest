@@ -1,0 +1,136 @@
+package hw3;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+class MultiplayerGameTest {
+
+    @Test
+    void constructorTest1() {
+        MultiplayerGame g = new MultiplayerGame(1);
+        g.addGamePiece(0, "pawn", 1);
+        assertEquals(1, 1);
+    }
+
+    @Test
+    void constructorTest2() {
+        MultiplayerGame g = new MultiplayerGame(6);
+        assertEquals(g.toString(), "Player0;  Player1;  Player2;  Player3;  Player4;  Player5; ");
+    }
+
+    @Test
+    void addGamePieceTest() {
+        MultiplayerGame g = new MultiplayerGame(6);
+        g.addGamePiece(0, "bishop", 50);
+        assertEquals(g.toString(),
+                "Player0;  GamePiece: bishop strength: 50;  Player1;  Player2;  Player3;  Player4;  Player5; ");
+        g.addGamePiece(3, "rook", 70);
+        g.addGamePiece(1, "queen", 50);
+        g.addGamePiece(5, "king", 55);
+        assertEquals(g.toString(),
+                "Player0;  GamePiece: bishop strength: 50;  Player1;  GamePiece: queen strength: 50;  Player2;  Player3;  GamePiece: rook strength: 70;  Player4;  Player5;  GamePiece: king strength: 55; ");
+    }
+
+    @Test
+    void sizeTest() {
+        MultiplayerGame g = new MultiplayerGame(3);
+        assertEquals(g.size(), 0);
+        g.addGamePiece(2, "joy", 100);
+        g.addGamePiece(2, "matt", 100);
+
+
+        assertEquals(g.size(), 2);
+
+    }
+
+    @Test
+    void removeGamePieceTest() {
+        MultiplayerGame g = new MultiplayerGame(4);
+        g.addGamePiece(3, "Brian", 100);
+        assertEquals(g.toString(), "Player0;  Player1;  Player2;  Player3;  GamePiece: Brian strength: 100; ");
+        g.removeGamePiece(3, "Brian");
+        assertEquals(g.toString(), "Player0;  Player1;  Player2;  Player3; ");
+    }
+
+    @Test
+    void hasGamePieceTest() {
+        MultiplayerGame g = new MultiplayerGame(5);
+        g.addGamePiece(3, "sara", 100);
+        assertEquals(g.hasGamePiece("sara"), true);
+        assertEquals(g.hasGamePiece("danielle"), false);
+    }
+
+    @Test
+    void removeAllGamePieceTest() {
+        MultiplayerGame g = new MultiplayerGame(6);
+        g.addGamePiece(3, "leah", 100);
+        g.addGamePiece(3, "aidan", 100);
+        g.addGamePiece(5, "sara", 100);
+        g.addGamePiece(5, "brian", 100);
+        g.removeAllGamePieces(3);
+        assertEquals(g.toString(),
+                "Player0;  Player1;  Player2;  Player3;  Player4;  Player5;  GamePiece: brian strength: 100;  GamePiece: sara strength: 100; ");
+
+    }
+
+    @Test
+    void increaseStrengthTest() {
+        MultiplayerGame g = new MultiplayerGame(4);
+        g.addGamePiece(3, "sara", 4);
+        g.addGamePiece(3, "leah", 9);
+        g.increasesStrength(3, 1);
+        assertEquals(g.toString(),
+                "Player0;  Player1;  Player2;  Player3;  GamePiece: leah strength: 10;  GamePiece: sara strength: 5; ");
+    }
+
+    @Test
+    void initializeTurnTrackerTest() {
+        MultiplayerGame g = new MultiplayerGame(3);
+        g.initializeTurnTracker();
+        assertEquals(g.currentEntityToString(), "Player0");
+    }
+
+    @Test
+    void nextPlayerTest() {
+        MultiplayerGame g = new MultiplayerGame(6);
+        g.initializeTurnTracker();
+        assertEquals(g.currentEntityToString(), "Player0");
+        g.nextPlayer();
+        assertEquals(g.currentEntityToString(), "Player1");
+        g.nextPlayer();
+        assertEquals(g.currentEntityToString(), "Player2");
+        g.nextPlayer();
+        assertEquals(g.currentEntityToString(), "Player3");
+        g.nextPlayer();
+        assertEquals(g.currentEntityToString(), "Player4");
+        g.nextPlayer();
+        assertEquals(g.currentEntityToString(), "Player5");
+        g.nextPlayer();
+        assertEquals(g.currentEntityToString(), "Player0");
+    }
+
+    @Test
+    void nextEntityTest() {
+        MultiplayerGame g = new MultiplayerGame(3);
+        g.addGamePiece(2, "ramrod", 1000);
+        g.addGamePiece(2, "ryanR", 100);
+        g.initializeTurnTracker();
+        g.nextEntity();
+        g.nextEntity();
+        g.nextEntity();
+        assertEquals(g.currentEntityToString(), "GamePiece: ryanR strength: 100");
+    }
+
+    @Test
+    void prevPlayer() {
+        MultiplayerGame g = new MultiplayerGame(8);
+        g.addGamePiece(2, "matt", 100);
+        g.addGamePiece(2, "da.nyell", 100);
+        g.initializeTurnTracker();
+        g.prevPlayer();
+        g.prevPlayer();
+        assertEquals(g.currentEntityToString(), "Player6");
+    }
+}
+
